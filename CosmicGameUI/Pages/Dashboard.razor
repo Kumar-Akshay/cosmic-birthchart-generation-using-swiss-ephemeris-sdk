@@ -1,0 +1,102 @@
+@page "/"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject IChartHolderApiService ChartService
+@inject NavigationManager Nav
+@using CosmicGame.Shared.Models.Response
+@using CosmicGameUI.Services
+
+<PageTitle>Dashboard – Cosmic Birthchart</PageTitle>
+
+<MudBlazor.MudText Typo="MudBlazor.Typo.h5" Class="mb-1" Style="color:var(--cosmic-primary-light)">Dashboard</MudBlazor.MudText>
+<MudBlazor.MudText Typo="MudBlazor.Typo.body2" Style="color:var(--cosmic-text-muted)" Class="mb-6">
+    Overview of your astrological profiles
+</MudBlazor.MudText>
+
+@if (_loading)
+{
+    <Components.Shared.LoadingSpinner Message="Loading your charts..." />
+}
+else
+{
+    <!-- Stats row -->
+    <MudBlazor.MudGrid Class="mb-6">
+        <MudBlazor.MudItem xs="12" sm="4">
+            <div class="stat-card">
+                <div class="stat-number">@_charts.Count</div>
+                <div class="stat-label">Birth Charts</div>
+            </div>
+        </MudBlazor.MudItem>
+        <MudBlazor.MudItem xs="12" sm="4">
+            <div class="stat-card">
+                <div class="stat-number" style="font-size:20px;">@DateTime.Now.ToString("MMM d")</div>
+                <div class="stat-label">Today</div>
+            </div>
+        </MudBlazor.MudItem>
+        <MudBlazor.MudItem xs="12" sm="4">
+            <div class="stat-card">
+                <div class="stat-number">3</div>
+                <div class="stat-label">Chart Types</div>
+            </div>
+        </MudBlazor.MudItem>
+    </MudBlazor.MudGrid>
+
+    <!-- Recent charts -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <MudBlazor.MudText Typo="MudBlazor.Typo.h6">Recent Profiles</MudBlazor.MudText>
+        <MudBlazor.MudButton Variant="MudBlazor.Variant.Outlined" Color="MudBlazor.Color.Primary"
+                    StartIcon="@MudBlazor.Icons.Material.Filled.Add" Href="/chart-holders">
+            View All
+        </MudBlazor.MudButton>
+    </div>
+
+    @if (!_charts.Any())
+    {
+        <MudBlazor.MudPaper Class="pa-8" Style="text-align:center;background:var(--cosmic-surface);border:1px solid var(--cosmic-border);">
+            <MudBlazor.MudIcon Icon="@MudBlazor.Icons.Material.Filled.AutoAwesome" Style="font-size:48px;color:var(--cosmic-primary-light);margin-bottom:12px;" />
+            <MudBlazor.MudText Typo="MudBlazor.Typo.h6" Class="mb-2">No birth charts yet</MudBlazor.MudText>
+            <MudBlazor.MudText Typo="MudBlazor.Typo.body2" Style="color:var(--cosmic-text-muted)" Class="mb-4">
+                Create your first astrological profile to get started.
+            </MudBlazor.MudText>
+            <MudBlazor.MudButton Variant="MudBlazor.Variant.Filled" Color="MudBlazor.Color.Primary"
+                        Href="/chart-holders/add" StartIcon="@MudBlazor.Icons.Material.Filled.Add">
+                Add Birth Chart
+            </MudBlazor.MudButton>
+        </MudBlazor.MudPaper>
+    }
+    else
+    {
+        <MudBlazor.MudGrid>
+            @foreach (var chart in _charts.Take(6))
+            {
+                <MudBlazor.MudItem xs="12" sm="6" md="4">
+                    <div class="chart-card" style="padding:20px;cursor:pointer;"
+                         @onclick="@(() => Nav.NavigateTo($"/charts/{chart.ChartHolderID}"))">
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                            <MudBlazor.MudAvatar Color="MudBlazor.Color.Primary" Style="background:rgba(124,77,255,0.2);">
+                                @(chart.ChildName?.Length > 0 ? chart.ChildName[0].ToString().ToUpper() : "?")
+                            </MudBlazor.MudAvatar>
+                            <div>
+                                <div style="font-weight:600;">@chart.ChildName</div>
+                                <div style="font-size:12px;color:var(--cosmic-text-muted);">@chart.DOB</div>
+                            </div>
+                        </div>
+                        <MudBlazor.MudChip T="string" Size="MudBlazor.Size.Small" Style="background:rgba(124,77,255,0.15);color:var(--cosmic-primary-light);">
+                            @chart.BirhPlace
+                        </MudBlazor.MudChip>
+                    </div>
+                </MudBlazor.MudItem>
+            }
+        </MudBlazor.MudGrid>
+    }
+}
+
+@code {
+    private List<ChartHolderResponse> _charts = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _charts = await ChartService.GetChartHoldersAsync();
+        _loading = false;
+    }
+}

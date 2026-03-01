@@ -1,0 +1,133 @@
+@page "/chart-holders"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject IChartHolderApiService ChartService
+@inject MudBlazor.IDialogService DialogService
+@inject MudBlazor.ISnackbar Snackbar
+@inject NavigationManager Nav
+@using CosmicGame.Shared.Models.Response
+@using CosmicGameUI.Components.Shared
+@using CosmicGameUI.Services
+
+<PageTitle>Birth Charts – Cosmic Birthchart</PageTitle>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <MudBlazor.MudText Typo="MudBlazor.Typo.h5" Style="color:var(--cosmic-primary-light)">Birth Charts</MudBlazor.MudText>
+    <MudBlazor.MudButton Variant="MudBlazor.Variant.Filled"
+                Color="MudBlazor.Color.Primary"
+                StartIcon="@MudBlazor.Icons.Material.Filled.Add"
+                Href="/chart-holders/add">
+        New Chart
+    </MudBlazor.MudButton>
+</div>
+
+<!-- Search bar -->
+<MudBlazor.MudTextField @bind-Value="_searchTerm"
+               Placeholder="Search by name or place..."
+               Adornment="MudBlazor.Adornment.Start"
+               AdornmentIcon="@MudBlazor.Icons.Material.Filled.Search"
+               Variant="MudBlazor.Variant.Outlined"
+               Clearable="true"
+               Class="mb-4" />
+
+@if (_loading)
+{
+    <LoadingSpinner Message="Loading profiles..." />
+}
+else if (!FilteredCharts.Any())
+{
+    <MudBlazor.MudText Typo="MudBlazor.Typo.body1" Style="color:var(--cosmic-text-muted);text-align:center;padding:40px;">
+        No charts found.
+    </MudBlazor.MudText>
+}
+else
+{
+    <MudBlazor.MudGrid>
+        @foreach (var chart in FilteredCharts)
+        {
+            <MudBlazor.MudItem xs="12" sm="6" lg="4">
+                <div class="chart-card" style="padding:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <div style="display:flex;gap:12px;align-items:center;">
+                            <MudBlazor.MudAvatar Color="MudBlazor.Color.Primary" Style="background:rgba(124,77,255,0.2);">
+                                @(chart.ChildName?.Length > 0 ? chart.ChildName[0].ToString().ToUpper() : "?")
+                            </MudBlazor.MudAvatar>
+                            <div>
+                                <div style="font-weight:600;font-size:15px;">@chart.ChildName</div>
+                                <div style="font-size:12px;color:var(--cosmic-text-muted);">@chart.DOB · @chart.Gender</div>
+                            </div>
+                        </div>
+                        <div>
+                            <MudBlazor.MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" Size="MudBlazor.Size.Small"
+                                           Href="@($"/chart-holders/edit/{chart.ChartHolderID}")" />
+                            <MudBlazor.MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Delete" Size="MudBlazor.Size.Small"
+                                           Color="MudBlazor.Color.Error"
+                                           OnClick="@(() => ConfirmDelete(chart))" />
+                        </div>
+                    </div>
+
+                    <MudBlazor.MudDivider Class="my-3" />
+
+                    <div style="font-size:13px;color:var(--cosmic-text-muted);">
+                        <MudBlazor.MudIcon Icon="@MudBlazor.Icons.Material.Filled.LocationOn" Size="MudBlazor.Size.Small" Style="vertical-align:middle;" />
+                        @chart.BirhPlace, @chart.Country
+                    </div>
+
+                    <div style="margin-top:12px;">
+                        <MudBlazor.MudButton Variant="MudBlazor.Variant.Outlined"
+                                    Color="MudBlazor.Color.Primary"
+                                    Size="MudBlazor.Size.Small"
+                                    FullWidth="true"
+                                    Href="@($"/charts/{chart.ChartHolderID}")"
+                                    StartIcon="@MudBlazor.Icons.Material.Filled.AutoAwesome">
+                            View Charts
+                        </MudBlazor.MudButton>
+                    </div>
+                </div>
+            </MudBlazor.MudItem>
+        }
+    </MudBlazor.MudGrid>
+}
+
+@code {
+    private List<ChartHolderResponse> _charts = new();
+    private bool _loading = true;
+    private string _searchTerm = "";
+
+    private IEnumerable<ChartHolderResponse> FilteredCharts =>
+        string.IsNullOrWhiteSpace(_searchTerm)
+            ? _charts
+            : _charts.Where(c =>
+                (c.ChildName?.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (c.BirhPlace?.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    protected override async Task OnInitializedAsync()
+    {
+        _charts = await ChartService.GetChartHoldersAsync();
+        _loading = false;
+    }
+
+    private async Task ConfirmDelete(ChartHolderResponse chart)
+    {
+        var options = new MudBlazor.DialogOptions { CloseButton = true, MaxWidth = MudBlazor.MaxWidth.ExtraSmall };
+        var parameters = new MudBlazor.DialogParameters
+        {
+            ["ContentText"] = $"Delete '{chart.ChildName}'s chart? This cannot be undone.",
+            ["ConfirmText"] = "Delete"
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            var response = await ChartService.DeleteChartHolderAsync(chart.ChartHolderID);
+            if (response?.success == true)
+            {
+                _charts.Remove(chart);
+                Snackbar.Add("Chart deleted.", MudBlazor.Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Failed to delete chart.", MudBlazor.Severity.Error);
+            }
+        }
+    }
+}

@@ -1,0 +1,104 @@
+@page "/register"
+@inject IAuthService AuthService
+@inject NavigationManager Nav
+@inject MudBlazor.ISnackbar Snackbar
+@using CosmicGame.Shared.Models.Request
+@using CosmicGameUI.Services
+
+<PageTitle>Register – Cosmic Birthchart</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="cosmic-logo">
+            <svg width="48" height="48" viewBox="0 0 60 60" fill="none">
+                <circle cx="30" cy="30" r="28" stroke="#7c4dff" stroke-width="2"/>
+                <circle cx="30" cy="30" r="6" fill="#7c4dff"/>
+            </svg>
+            <h1>Create Account</h1>
+            <p>Join the cosmic journey</p>
+        </div>
+
+        <MudBlazor.MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudBlazor.MudTextField @bind-Value="_model.Email"
+                           Label="Email Address"
+                           Variant="MudBlazor.Variant.Outlined"
+                           InputType="MudBlazor.InputType.Email"
+                           Required="true"
+                           RequiredError="Email is required"
+                           Adornment="MudBlazor.Adornment.Start"
+                           AdornmentIcon="@MudBlazor.Icons.Material.Filled.Email"
+                           Class="mb-3" />
+
+            <MudBlazor.MudTextField @bind-Value="_model.Contact"
+                           Label="Phone Number"
+                           Variant="MudBlazor.Variant.Outlined"
+                           Adornment="MudBlazor.Adornment.Start"
+                           AdornmentIcon="@MudBlazor.Icons.Material.Filled.Phone"
+                           Class="mb-3" />
+
+            <MudBlazor.MudTextField @bind-Value="_model.Password"
+                           Label="Password"
+                           Variant="MudBlazor.Variant.Outlined"
+                           InputType="MudBlazor.InputType.Password"
+                           Required="true"
+                           RequiredError="Password is required"
+                           Class="mb-3" />
+
+            <MudBlazor.MudTextField @bind-Value="_model.ConfirmPassword"
+                           Label="Confirm Password"
+                           Variant="MudBlazor.Variant.Outlined"
+                           InputType="MudBlazor.InputType.Password"
+                           Required="true"
+                           Validation="@(new Func<string, string>(ValidateConfirmPassword))"
+                           Class="mb-4" />
+
+            <MudBlazor.MudButton Variant="MudBlazor.Variant.Filled"
+                        Color="MudBlazor.Color.Primary"
+                        FullWidth="true"
+                        Size="MudBlazor.Size.Large"
+                        OnClick="@HandleRegister"
+                        Disabled="@_loading"
+                        Style="border-radius:8px;padding:12px;">
+                @if (_loading) { <MudBlazor.MudProgressCircular Size="MudBlazor.Size.Small" Indeterminate="true" Class="mr-2" /> }
+                Create Account
+            </MudBlazor.MudButton>
+        </MudBlazor.MudForm>
+
+        <div style="margin-top:16px;text-align:center;">
+            <MudBlazor.MudText Typo="MudBlazor.Typo.body2" Style="color:var(--cosmic-text-muted)">
+                Already have an account? <MudBlazor.MudLink Href="/login" Color="MudBlazor.Color.Primary">Sign in</MudBlazor.MudLink>
+            </MudBlazor.MudText>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterRequest _model = new() { URL = "https://localhost:7001/verify" };
+    private MudBlazor.MudForm _form;
+    private bool _isValid;
+    private bool _loading;
+
+    private string ValidateConfirmPassword(string value) =>
+        value == _model.Password ? null : "Passwords do not match";
+
+    private async Task HandleRegister()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+        _loading = true;
+        try
+        {
+            var result = await AuthService.RegisterAsync(_model);
+            if (result?.success == true)
+            {
+                Snackbar.Add("Account created! Check your email to verify.", MudBlazor.Severity.Success);
+                Nav.NavigateTo("/login");
+            }
+            else
+            {
+                Snackbar.Add(result?.message ?? "Registration failed.", MudBlazor.Severity.Error);
+            }
+        }
+        finally { _loading = false; }
+    }
+}

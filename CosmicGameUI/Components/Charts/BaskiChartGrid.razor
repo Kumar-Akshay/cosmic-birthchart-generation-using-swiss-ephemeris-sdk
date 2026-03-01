@@ -1,0 +1,66 @@
+@using CosmicGame.Shared.Models.ViewModel
+
+<div style="overflow-x:auto;">
+    <table class="baski-table" style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+            <tr>
+                <th style="padding:10px 14px;text-align:left;">Planet</th>
+                <th style="padding:10px 14px;text-align:left;">Degree</th>
+                <th style="padding:10px 14px;text-align:left;">House</th>
+                <th style="padding:10px 14px;text-align:left;">Star Lord</th>
+                <th style="padding:10px 14px;text-align:left;">Sub Lord</th>
+                <th style="padding:10px 14px;text-align:left;">Sub-Sub Lord</th>
+                <th style="padding:10px 14px;text-align:left;">Rasi Lord</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Rows?.Any() == true)
+            {
+                @foreach (var row in Rows)
+                {
+                    <tr class="@(row.IsCurrentDasha ? "is-current-dasha" : "")"
+                        style="border-bottom:1px solid var(--cosmic-border);">
+                        <td style="padding:10px 14px;font-weight:@(row.IsCurrentDasha ? "700" : "400");color:var(--cosmic-text);">
+                            @GetPlanetDisplay(row.Planet)
+                        </td>
+                        <td style="padding:10px 14px;color:var(--cosmic-gold);font-family:monospace;font-size:12px;">
+                            @row.Degree
+                        </td>
+                        <td style="padding:10px 14px;color:var(--cosmic-text-muted);">@row.House</td>
+                        <td style="padding:10px 14px;">@row.StarLord</td>
+                        <td style="padding:10px 14px;">@row.SubLord</td>
+                        <td style="padding:10px 14px;">@row.SubSubLord</td>
+                        <td style="padding:10px 14px;">@row.RasiLord</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:32px;color:var(--cosmic-text-muted);">
+                        No data available
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter] public List<BaskiChartRow> Rows { get; set; }
+
+    private string GetPlanetDisplay(string planet) => planet?.ToUpper() switch
+    {
+        "SUN" or "SU" => "☉ Sun",
+        "MOON" or "MO" => "☽ Moon",
+        "MARS" or "MA" => "♂ Mars",
+        "MERCURY" or "ME" => "☿ Mercury",
+        "JUPITER" or "JU" => "♃ Jupiter",
+        "VENUS" or "VE" => "♀ Venus",
+        "SATURN" or "SA" => "♄ Saturn",
+        "RAHU" or "RA" => "☊ Rahu",
+        "KETU" or "KE" => "☋ Ketu",
+        "ASC" => "↑ Ascendant",
+        _ => planet ?? ""
+    };
+}

@@ -1,0 +1,101 @@
+@using CosmicGame.Shared.Models.ViewModel
+
+@* SVG-based 12-house zodiac diamond wheel *@
+<div class="zodiac-wheel-container" id="@ElementId">
+    <svg class="zodiac-wheel" width="@Size" height="@Size"
+         viewBox="0 0 500 500"
+         xmlns="http://www.w3.org/2000/svg">
+
+        @* Outer circle *@
+        <circle cx="250" cy="250" r="200" fill="none" stroke="var(--cosmic-primary)" stroke-width="1.5" />
+
+        @* Middle circle *@
+        <circle cx="250" cy="250" r="140" fill="none" stroke="var(--cosmic-primary)" stroke-width="1" opacity="0.4" />
+
+        @* Inner circle *@
+        <circle cx="250" cy="250" r="100" fill="var(--cosmic-surface)" stroke="var(--cosmic-primary)" stroke-width="1.5" />
+
+        @* House divider lines from outer to inner ring *@
+        @for (int i = 0; i < 12; i++)
+        {
+            var angle = (i * 30 - 90) * Math.PI / 180.0;
+            var x1 = 250 + 200 * Math.Cos(angle);
+            var y1 = 250 + 200 * Math.Sin(angle);
+            var x2 = 250 + 100 * Math.Cos(angle);
+            var y2 = 250 + 100 * Math.Sin(angle);
+            <line x1="@x1.ToString("F1")" y1="@y1.ToString("F1")"
+                  x2="@x2.ToString("F1")" y2="@y2.ToString("F1")"
+                  stroke="var(--cosmic-primary)" stroke-width="1" opacity="0.5" />
+        }
+
+        @* House segments: number, planet symbols, zodiac sign *@
+        @for (int h = 0; h < 12; h++)
+        {
+            var cell = Cells?.ElementAtOrDefault(h);
+            var midAngle = ((h * 30 + 15) - 90) * Math.PI / 180.0;
+
+            @* House number in middle ring *@
+            var numX = 250 + 120 * Math.Cos(midAngle);
+            var numY = 250 + 120 * Math.Sin(midAngle);
+            @((MarkupString)$"<text x=\"{numX:F1}\" y=\"{numY:F1}\" text-anchor=\"middle\" dominant-baseline=\"middle\" class=\"house-number\">{h + 1}</text>")
+
+            @* Planets for this house *@
+            @if (cell?.Planets?.Any() == true)
+            {
+                var planetX = 250 + 165 * Math.Cos(midAngle);
+                var planetY = 250 + 165 * Math.Sin(midAngle);
+                var symbols = string.Join(" ", cell.Planets.Select(p => GetPlanetSymbol(p)));
+                @((MarkupString)$"<text x=\"{planetX:F1}\" y=\"{planetY:F1}\" text-anchor=\"middle\" dominant-baseline=\"middle\" class=\"planet-text\">{symbols}</text>")
+            }
+
+            @* Zodiac sign label in outer ring *@
+            var signX = 250 + 175 * Math.Cos(midAngle);
+            var signY = 250 + 175 * Math.Sin(midAngle);
+            var signLabel = System.Web.HttpUtility.HtmlEncode(cell?.ZodiacSign ?? ZodiacNames[h]);
+            @((MarkupString)$"<text x=\"{signX:F1}\" y=\"{signY:F1}\" text-anchor=\"middle\" dominant-baseline=\"middle\" class=\"zodiac-label\" style=\"font-size:9px;\">{signLabel}</text>")
+        }
+
+        @* Outer ring zodiac symbols *@
+        @for (int i = 0; i < 12; i++)
+        {
+            var angle = i * 30.0 - 90.0;
+            var rad = angle * Math.PI / 180.0;
+            var x = 250 + 225 * Math.Cos(rad);
+            var y = 250 + 225 * Math.Sin(rad);
+            @((MarkupString)$"<text x=\"{x:F1}\" y=\"{y:F1}\" text-anchor=\"middle\" dominant-baseline=\"middle\" class=\"zodiac-label\">{ZodiacSymbols[i]}</text>")
+        }
+
+        @* Center label *@
+        @((MarkupString)"<text x=\"250\" y=\"245\" text-anchor=\"middle\" dominant-baseline=\"middle\" style=\"fill:var(--cosmic-primary-light);font-size:11px;font-family:Roboto,sans-serif;\">&#x2726;</text>")
+        @((MarkupString)"<text x=\"250\" y=\"262\" text-anchor=\"middle\" dominant-baseline=\"middle\" style=\"fill:var(--cosmic-text-muted);font-size:8px;font-family:Roboto,sans-serif;\">RASI</text>")
+    </svg>
+</div>
+
+@code {
+    [Parameter] public List<TraditionalChartCell> Cells { get; set; }
+    [Parameter] public int Size { get; set; } = 460;
+    [Parameter] public string ElementId { get; set; } = "zodiac-wheel";
+
+    private static readonly string[] ZodiacSymbols =
+        { "♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓" };
+
+    private static readonly string[] ZodiacNames =
+    {
+        "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+        "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
+    };
+
+    private static string GetPlanetSymbol(string planet) => planet?.ToUpper() switch
+    {
+        "SUN" or "SU" => "&#x2609;",
+        "MOON" or "MO" => "&#x263D;",
+        "MARS" or "MA" => "&#x2642;",
+        "MERCURY" or "ME" => "&#x263F;",
+        "JUPITER" or "JU" => "&#x2643;",
+        "VENUS" or "VE" => "&#x2640;",
+        "SATURN" or "SA" => "&#x2644;",
+        "RAHU" or "RA" => "&#x260A;",
+        "KETU" or "KE" => "&#x260B;",
+        _ => System.Web.HttpUtility.HtmlEncode(planet ?? "")
+    };
+}

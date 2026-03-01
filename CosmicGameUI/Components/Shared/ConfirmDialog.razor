@@ -1,0 +1,19 @@
+@inject MudBlazor.IDialogService DialogService
+
+@code {
+    [CascadingParameter] MudBlazor.MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string ContentText { get; set; }
+    [Parameter] public string ConfirmText { get; set; } = "Delete";
+
+    private void Cancel() => MudDialog.Cancel();
+    private void Confirm() => MudDialog.Close(MudBlazor.DialogResult.Ok(true));
+}
+
+<MudBlazor.MudDialogContent>
+    <MudBlazor.MudText>@ContentText</MudBlazor.MudText>
+</MudBlazor.MudDialogContent>
+
+<MudBlazor.MudDialogActions>
+    <MudBlazor.MudButton OnClick="@Cancel">Cancel</MudBlazor.MudButton>
+    <MudBlazor.MudButton Color="MudBlazor.Color.Error" Variant="MudBlazor.Variant.Filled" OnClick="@Confirm">@ConfirmText</MudBlazor.MudButton>
+</MudBlazor.MudDialogActions>

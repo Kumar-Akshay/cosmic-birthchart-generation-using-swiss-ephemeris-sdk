@@ -1,9 +1,13 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.1.32328.378
+VisualStudioVersion = 17.8.34322.80
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CosmicGameAPI", "CosmicGameAPI\CosmicGameAPI.csproj", "{AF270F42-FA2D-4005-AD19-466C11C6FC50}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CosmicGameUI", "CosmicGameUI\CosmicGameUI.csproj", "{B1E2C3D4-F5A6-7890-BCDE-F01234567890}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CosmicGame.Shared", "CosmicGame.Shared\CosmicGame.Shared.csproj", "{C2D3E4F5-A6B7-8901-CDEF-012345678901}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{AF270F42-FA2D-4005-AD19-466C11C6FC50}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF270F42-FA2D-4005-AD19-466C11C6FC50}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF270F42-FA2D-4005-AD19-466C11C6FC50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1E2C3D4-F5A6-7890-BCDE-F01234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1E2C3D4-F5A6-7890-BCDE-F01234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1E2C3D4-F5A6-7890-BCDE-F01234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1E2C3D4-F5A6-7890-BCDE-F01234567890}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2D3E4F5-A6B7-8901-CDEF-012345678901}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2D3E4F5-A6B7-8901-CDEF-012345678901}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2D3E4F5-A6B7-8901-CDEF-012345678901}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2D3E4F5-A6B7-8901-CDEF-012345678901}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

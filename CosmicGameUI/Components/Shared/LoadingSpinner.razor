@@ -1,0 +1,15 @@
+@if (Visible)
+{
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;gap:16px;">
+        <MudBlazor.MudProgressCircular Color="MudBlazor.Color.Primary" Indeterminate="true" Size="MudBlazor.Size.Large" />
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <MudBlazor.MudText Typo="MudBlazor.Typo.body2" Style="color:var(--cosmic-text-muted)">@Message</MudBlazor.MudText>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public bool Visible { get; set; } = true;
+    [Parameter] public string Message { get; set; }
+}

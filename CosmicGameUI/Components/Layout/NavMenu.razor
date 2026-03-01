@@ -1,0 +1,49 @@
+@inject NavigationManager Nav
+@inject IAuthService AuthService
+@using CosmicGameUI.Services
+
+<MudBlazor.MudNavMenu Class="pa-2">
+    <!-- Logo area -->
+    <div style="padding:16px 12px 24px;text-align:center;">
+        <svg width="40" height="40" viewBox="0 0 60 60" fill="none">
+            <circle cx="30" cy="30" r="28" stroke="#7c4dff" stroke-width="2"/>
+            <circle cx="30" cy="30" r="18" stroke="#b388ff" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <circle cx="30" cy="30" r="6" fill="#7c4dff"/>
+        </svg>
+        <div style="color:var(--cosmic-text-muted);font-size:11px;letter-spacing:1.5px;margin-top:8px;">COSMIC BIRTHCHART</div>
+    </div>
+
+    <MudBlazor.MudNavLink Href="/" Match="NavLinkMatch.All"
+                 Icon="@MudBlazor.Icons.Material.Filled.Dashboard"
+                 IconColor="MudBlazor.Color.Primary">
+        Dashboard
+    </MudBlazor.MudNavLink>
+
+    <MudBlazor.MudNavLink Href="/chart-holders"
+                 Icon="@MudBlazor.Icons.Material.Filled.People"
+                 IconColor="MudBlazor.Color.Primary">
+        Birth Charts
+    </MudBlazor.MudNavLink>
+
+    <MudBlazor.MudNavLink Href="/profile"
+                 Icon="@MudBlazor.Icons.Material.Filled.Person"
+                 IconColor="MudBlazor.Color.Primary">
+        Profile
+    </MudBlazor.MudNavLink>
+
+    <MudBlazor.MudDivider Class="my-2" />
+
+    <MudBlazor.MudNavLink OnClick="@LogoutAsync"
+                 Icon="@MudBlazor.Icons.Material.Filled.Logout"
+                 IconColor="MudBlazor.Color.Error">
+        Sign Out
+    </MudBlazor.MudNavLink>
+</MudBlazor.MudNavMenu>
+
+@code {
+    private async Task LogoutAsync()
+    {
+        await AuthService.LogoutAsync();
+        Nav.NavigateTo("/login");
+    }
+}

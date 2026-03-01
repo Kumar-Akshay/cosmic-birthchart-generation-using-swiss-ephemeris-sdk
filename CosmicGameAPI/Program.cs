@@ -10,10 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Configuration;
 using System.Text;
-
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +26,6 @@ builder.Services.AddTransient<IChartsService, ChartsService>();
 builder.Services.AddTransient<IBhavaPlanetService, BhavaPlanetService>();
 builder.Services.AddSingleton(typeof(IBaseAutoMapper<,>), typeof(BaseAutoMapper<,>));
 
-
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -43,68 +39,84 @@ builder.Services.AddAuthentication(x =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(GlobalVars.JwtKey)),
         ValidateIssuer = true,
         ValidateAudience = true,
-        ValidIssuer = builder.Configuration.GetSection("AuthToken").GetSection("Issuer").Value,
-        ValidAudience = builder.Configuration.GetSection("AuthToken").GetSection("Audience").Value,
+        ValidIssuer = builder.Configuration["AuthToken:Issuer"],
+        ValidAudience = builder.Configuration["AuthToken:Audience"],
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
     };
 });
-builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
+
+// CORS: allow Blazor WASM dev server + any configured production origin
+builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", policy =>
 {
-    builder
+    policy
+        .WithOrigins(
+            "https://localhost:7001",
+            "http://localhost:5001",
+            "https://localhost:7002",
+            "http://localhost:5002"
+        )
         .AllowAnyMethod()
         .AllowAnyHeader()
-         .SetIsOriginAllowed(_ => true)
         .AllowCredentials();
 }));
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c => {
+
+// Swashbuckle Swagger
+builder.Services.AddSwaggerGen(c =>
+{
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Astrology API's",
-        Version = "v1"
+        Title = "Cosmic Birthchart API",
+        Version = "v1",
+        Description = "Astrological birth chart generation using the Swiss Ephemeris SDK"
     });
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 1safsfsdfdfd\"",
+        Description = "Enter your JWT token. Example: Bearer {token}"
     });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
         {
-            new OpenApiSecurityScheme {
-                Reference = new OpenApiReference {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
                     Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer"
+                    Id = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
 });
-builder.Services.AddDbContext<CosmicDbContext>(x => x.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddDbContext<CosmicDbContext>(x =>
+    x.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// HTTP pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Cosmic Birthchart API v1");
+        options.RoutePrefix = string.Empty;
+    });
 }
 
 app.UseRouting();
 app.UseCors("CorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseSwaggerUI(options =>
-{
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-    options.RoutePrefix = string.Empty;
-});
 app.MapControllers();
 
 app.Run();

@@ -1,0 +1,245 @@
+/* ── Cosmic Birthchart – Global Styles ── */
+
+:root {
+    --cosmic-bg: #0d0d1a;
+    --cosmic-surface: #1a1a2e;
+    --cosmic-surface-variant: #16213e;
+    --cosmic-primary: #7c4dff;
+    --cosmic-primary-light: #b388ff;
+    --cosmic-accent: #00e5ff;
+    --cosmic-gold: #ffd54f;
+    --cosmic-text: #e8eaf6;
+    --cosmic-text-muted: #9fa8da;
+    --cosmic-border: rgba(124, 77, 255, 0.3);
+    --cosmic-error: #ff5370;
+    --cosmic-success: #69f0ae;
+}
+
+/* Light theme overrides */
+[data-theme="light"] {
+    --cosmic-bg: #f3f0ff;
+    --cosmic-surface: #ffffff;
+    --cosmic-surface-variant: #ede7f6;
+    --cosmic-text: #1a1a2e;
+    --cosmic-text-muted: #5c6bc0;
+    --cosmic-border: rgba(124, 77, 255, 0.2);
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--cosmic-bg);
+    color: var(--cosmic-text);
+}
+
+/* ── Zodiac Wheel ── */
+.zodiac-wheel-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+}
+
+.zodiac-wheel {
+    filter: drop-shadow(0 0 20px rgba(124, 77, 255, 0.4));
+}
+
+.house-cell {
+    fill: var(--cosmic-surface);
+    stroke: var(--cosmic-primary);
+    stroke-width: 1.5;
+    transition: fill 0.2s;
+}
+
+.house-cell:hover {
+    fill: var(--cosmic-surface-variant);
+}
+
+.planet-text {
+    font-size: 11px;
+    fill: var(--cosmic-gold);
+    font-weight: 600;
+    font-family: 'Roboto', sans-serif;
+}
+
+.house-number {
+    font-size: 9px;
+    fill: var(--cosmic-text-muted);
+}
+
+.zodiac-label {
+    font-size: 8px;
+    fill: var(--cosmic-primary-light);
+}
+
+/* ── Chart Cards ── */
+.chart-card {
+    background: var(--cosmic-surface);
+    border: 1px solid var(--cosmic-border);
+    border-radius: 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.chart-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(124, 77, 255, 0.25);
+}
+
+/* ── Vimso Timeline ── */
+.vimso-period-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--cosmic-primary), var(--cosmic-accent));
+    transition: width 0.5s ease;
+}
+
+.vimso-period-row.current {
+    background: rgba(124, 77, 255, 0.15);
+    border-left: 3px solid var(--cosmic-primary);
+}
+
+/* ── Baski Chart Table ── */
+.baski-table th {
+    background: var(--cosmic-surface-variant);
+    color: var(--cosmic-primary-light);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.baski-table .is-current-dasha {
+    background: rgba(0, 229, 255, 0.1);
+    border-left: 3px solid var(--cosmic-accent);
+}
+
+/* ── Stars background animation ── */
+@keyframes twinkle {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+.star {
+    position: fixed;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 3s infinite;
+    pointer-events: none;
+}
+
+/* ── Login Page ── */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 50% 0%, rgba(124,77,255,0.15) 0%, var(--cosmic-bg) 60%);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--cosmic-surface);
+    border: 1px solid var(--cosmic-border);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.cosmic-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.cosmic-logo h1 {
+    color: var(--cosmic-primary-light);
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 12px 0 4px;
+}
+
+.cosmic-logo p {
+    color: var(--cosmic-text-muted);
+    font-size: 12px;
+    margin: 0;
+}
+
+/* ── Navigation ── */
+.nav-item-cosmic {
+    border-radius: 8px;
+    margin: 2px 8px;
+    transition: background 0.2s;
+}
+
+.nav-item-cosmic:hover, .nav-item-cosmic.active {
+    background: rgba(124, 77, 255, 0.15);
+}
+
+/* ── Dashboard Stats ── */
+.stat-card {
+    background: linear-gradient(135deg, var(--cosmic-surface) 0%, var(--cosmic-surface-variant) 100%);
+    border: 1px solid var(--cosmic-border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--cosmic-primary-light);
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--cosmic-text-muted);
+    margin-top: 4px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+    .zodiac-wheel {
+        width: 320px;
+        height: 320px;
+    }
+
+    .login-card {
+        margin: 16px;
+        padding: 24px;
+    }
+}
+
+/* ── Error UI ── */
+#blazor-error-ui {
+    background: var(--cosmic-error);
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    left: 0;
+    padding: 0.6rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+    color: white;
+    font-size: 14px;
+}
+
+#blazor-error-ui .reload {
+    color: white;
+    text-decoration: underline;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    font-size: 16px;
+}
