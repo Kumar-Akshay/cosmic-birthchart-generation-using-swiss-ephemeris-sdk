@@ -1,0 +1,247 @@
+@page "/charts/{ChartHolderId:int}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject IAstroChartApiService ChartApiService
+@inject IChartHolderApiService ChartHolderService
+@inject IJSRuntime JS
+@inject MudBlazor.ISnackbar Snackbar
+@using CosmicGame.Shared.Models.Response
+@using CosmicGame.Shared.Models.ViewModel
+@using CosmicGameUI.Components.Charts
+@using CosmicGameUI.Components.Shared
+@using CosmicGameUI.Services
+
+<PageTitle>@(_chartHolder?.ChildName ?? "Chart") – Cosmic Birthchart</PageTitle>
+
+<!-- Header -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+        <MudBlazor.MudText Typo="MudBlazor.Typo.h5" Style="color:var(--cosmic-primary-light)">
+            @_chartHolder?.ChildName
+        </MudBlazor.MudText>
+        <MudBlazor.MudText Typo="MudBlazor.Typo.body2" Style="color:var(--cosmic-text-muted)">
+            @_chartHolder?.DOB · @_chartHolder?.BirhPlace · @_chartHolder?.TimeZone
+        </MudBlazor.MudText>
+    </div>
+    <div style="display:flex;gap:8px;">
+        <MudBlazor.MudButton StartIcon="@MudBlazor.Icons.Material.Filled.FileDownload"
+                    Variant="MudBlazor.Variant.Outlined"
+                    Color="MudBlazor.Color.Secondary"
+                    Size="MudBlazor.Size.Small"
+                    OnClick="@ExportSvg">
+            Export SVG
+        </MudBlazor.MudButton>
+        <MudBlazor.MudButton StartIcon="@MudBlazor.Icons.Material.Filled.Image"
+                    Variant="MudBlazor.Variant.Outlined"
+                    Color="MudBlazor.Color.Secondary"
+                    Size="MudBlazor.Size.Small"
+                    OnClick="@ExportPng">
+            Export PNG
+        </MudBlazor.MudButton>
+        <MudBlazor.MudButton StartIcon="@MudBlazor.Icons.Material.Filled.ArrowBack"
+                    Href="/chart-holders"
+                    Variant="MudBlazor.Variant.Text"
+                    Size="MudBlazor.Size.Small">
+            Back
+        </MudBlazor.MudButton>
+    </div>
+</div>
+
+<MudBlazor.MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true"
+          PanelClass="pt-4" @bind-ActivePanelIndex="_activeTab"
+          TabHeaderClass="cosmic-tabs">
+    <!-- Traditional Chart -->
+    <MudBlazor.MudTabPanel Text="Traditional" Icon="@MudBlazor.Icons.Material.Filled.CircleOutlined">
+        @if (_loadingTraditional)
+        {
+            <LoadingSpinner Message="Calculating planetary positions..." />
+        }
+        else
+        {
+            <MudBlazor.MudGrid>
+                <MudBlazor.MudItem xs="12" md="7">
+                    <TraditionalChartWheel Cells="@_traditionalCells" ElementId="zodiac-svg-export" />
+                </MudBlazor.MudItem>
+                <MudBlazor.MudItem xs="12" md="5">
+                    <MudBlazor.MudPaper Class="pa-4" Style="background:var(--cosmic-surface);border:1px solid var(--cosmic-border);">
+                        <MudBlazor.MudText Typo="MudBlazor.Typo.subtitle1" Class="mb-3" Style="color:var(--cosmic-primary-light)">
+                            Houses &amp; Planets
+                        </MudBlazor.MudText>
+                        @if (_traditionalCells?.Any() == true)
+                        {
+                            @foreach (var cell in _traditionalCells.Where(c => c.Planets?.Any() == true))
+                            {
+                                <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--cosmic-border);font-size:13px;">
+                                    <span style="color:var(--cosmic-text-muted);">House @cell.HouseNumber – @cell.ZodiacSign</span>
+                                    <span style="color:var(--cosmic-gold);">@string.Join(", ", cell.Planets)</span>
+                                </div>
+                            }
+                        }
+                    </MudBlazor.MudPaper>
+                </MudBlazor.MudItem>
+            </MudBlazor.MudGrid>
+        }
+    </MudBlazor.MudTabPanel>
+
+    <!-- Baski Chart -->
+    <MudBlazor.MudTabPanel Text="Baski (KP)" Icon="@MudBlazor.Icons.Material.Filled.TableChart">
+        @if (_loadingBaski)
+        {
+            <LoadingSpinner Message="Calculating sub-lords..." />
+        }
+        else
+        {
+            <MudBlazor.MudPaper Style="background:var(--cosmic-surface);border:1px solid var(--cosmic-border);border-radius:8px;overflow:hidden;">
+                <BaskiChartGrid Rows="@_baskiRows" />
+            </MudBlazor.MudPaper>
+        }
+    </MudBlazor.MudTabPanel>
+
+    <!-- Vimso Chart -->
+    <MudBlazor.MudTabPanel Text="Vimso (Dasha)" Icon="@MudBlazor.Icons.Material.Filled.Timeline">
+        @if (_loadingVimso)
+        {
+            <LoadingSpinner Message="Computing dasha periods..." />
+        }
+        else
+        {
+            <MudBlazor.MudGrid>
+                <!-- Dissai -->
+                <MudBlazor.MudItem xs="12">
+                    <MudBlazor.MudExpansionPanels @bind-ExpandedIndex="_vimsoExpandedIndex">
+                        <MudBlazor.MudExpansionPanel Text="Dissai (Major Periods)" IsInitiallyExpanded="true">
+                            <VimsoTimeline Periods="@_dissaiPeriods"
+                                          Title="Dissai"
+                                          ShowDrillDown="true"
+                                          OnDrillDown="@LoadPuthi" />
+                        </MudBlazor.MudExpansionPanel>
+
+                        @if (_puthiPeriods?.Any() == true)
+                        {
+                            <MudBlazor.MudExpansionPanel Text="@($"Puthi – under {_selectedDissai?.StarLord}")">
+                                <VimsoTimeline Periods="@_puthiPeriods"
+                                              Title="Puthi"
+                                              ShowDrillDown="true"
+                                              OnDrillDown="@LoadAntra" />
+                            </MudBlazor.MudExpansionPanel>
+                        }
+
+                        @if (_antraPeriods?.Any() == true)
+                        {
+                            <MudBlazor.MudExpansionPanel Text="@($"Antra/Soksuma – under {_selectedPuthi?.StarLord}")">
+                                <VimsoTimeline Periods="@_antraPeriods"
+                                              Title="Antra"
+                                              ShowDrillDown="true"
+                                              OnDrillDown="@LoadPrana" />
+                            </MudBlazor.MudExpansionPanel>
+                        }
+
+                        @if (_pranaPeriods?.Any() == true)
+                        {
+                            <MudBlazor.MudExpansionPanel Text="@($"Prana – under {_selectedAntra?.StarLord}")">
+                                <VimsoTimeline Periods="@_pranaPeriods"
+                                              Title="Prana"
+                                              ShowDrillDown="false" />
+                            </MudBlazor.MudExpansionPanel>
+                        }
+                    </MudBlazor.MudExpansionPanels>
+                </MudBlazor.MudItem>
+            </MudBlazor.MudGrid>
+        }
+    </MudBlazor.MudTabPanel>
+</MudBlazor.MudTabs>
+
+@code {
+    [Parameter] public int ChartHolderId { get; set; }
+
+    private ChartHolderResponse _chartHolder;
+    private int _activeTab = 0;
+    private int _vimsoExpandedIndex = 0;
+
+    // Traditional
+    private bool _loadingTraditional = true;
+    private List<TraditionalChartCell> _traditionalCells;
+
+    // Baski
+    private bool _loadingBaski = true;
+    private List<BaskiChartRow> _baskiRows;
+
+    // Vimso drill-down state
+    private bool _loadingVimso = true;
+    private List<VimsoChartCell> _dissaiPeriods;
+    private List<VimsoChartCell> _puthiPeriods;
+    private List<VimsoChartCell> _antraPeriods;
+    private List<VimsoChartCell> _pranaPeriods;
+    private VimsoChartCell _selectedDissai;
+    private VimsoChartCell _selectedPuthi;
+    private VimsoChartCell _selectedAntra;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _chartHolder = await ChartHolderService.GetChartHolderByIdAsync(ChartHolderId);
+
+        // Load all chart data in parallel
+        var t1 = ChartApiService.GetTraditionalChartAsync(ChartHolderId);
+        var t2 = ChartApiService.GetBaskiChartAsync(ChartHolderId);
+        var t3 = ChartApiService.GetVimsoDissaiAsync(ChartHolderId);
+
+        await Task.WhenAll(t1, t2, t3);
+
+        _traditionalCells = await t1;
+        _loadingTraditional = false;
+
+        _baskiRows = await t2;
+        _loadingBaski = false;
+
+        _dissaiPeriods = await t3;
+        // Mark current period
+        var now = DateTime.Now;
+        for (int i = 0; i < _dissaiPeriods.Count - 1; i++)
+            _dissaiPeriods[i].IsCurrentPeriod =
+                _dissaiPeriods[i].Date <= now && now < _dissaiPeriods[i + 1].Date;
+
+        _loadingVimso = false;
+    }
+
+    private async Task LoadPuthi(VimsoChartCell dissai)
+    {
+        _selectedDissai = dissai;
+        _puthiPeriods = null;
+        _antraPeriods = null;
+        _pranaPeriods = null;
+        _puthiPeriods = await ChartApiService.GetVimsoPuthiAsync(ChartHolderId, dissai.Gp);
+        _vimsoExpandedIndex = 1;
+    }
+
+    private async Task LoadAntra(VimsoChartCell puthi)
+    {
+        _selectedPuthi = puthi;
+        _antraPeriods = null;
+        _pranaPeriods = null;
+        _antraPeriods = await ChartApiService.GetVimsoAntraAsync(ChartHolderId, _selectedDissai.Gp, puthi.Gp);
+        _vimsoExpandedIndex = 2;
+    }
+
+    private async Task LoadPrana(VimsoChartCell antra)
+    {
+        _selectedAntra = antra;
+        _pranaPeriods = null;
+        _pranaPeriods = await ChartApiService.GetVimsoPranaAsync(ChartHolderId, _selectedDissai.Gp, _selectedPuthi.Gp, antra.Gp);
+        _vimsoExpandedIndex = 3;
+    }
+
+    private async Task ExportSvg()
+    {
+        await JS.InvokeVoidAsync("CosmicExport.downloadSvg",
+            "zodiac-svg-export",
+            $"{_chartHolder?.ChildName ?? "chart"}_traditional.svg");
+        Snackbar.Add("SVG exported!", MudBlazor.Severity.Success);
+    }
+
+    private async Task ExportPng()
+    {
+        await JS.InvokeVoidAsync("CosmicExport.downloadPng",
+            "zodiac-svg-export",
+            $"{_chartHolder?.ChildName ?? "chart"}_traditional.png");
+        Snackbar.Add("PNG exported!", MudBlazor.Severity.Success);
+    }
+}

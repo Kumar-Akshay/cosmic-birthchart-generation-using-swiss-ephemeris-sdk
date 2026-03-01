@@ -1,0 +1,106 @@
+@using CosmicGame.Shared.Models.ViewModel
+@using CosmicGameUI.Services
+
+<div>
+    @if (Periods?.Any() == true)
+    {
+        <div style="margin-bottom:16px;">
+            <MudBlazor.MudText Typo="MudBlazor.Typo.body2" Style="color:var(--cosmic-text-muted)">
+                @Title — @Periods.Count period(s)
+            </MudBlazor.MudText>
+        </div>
+
+        <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead>
+                    <tr>
+                        <th style="padding:10px 14px;text-align:left;color:var(--cosmic-primary-light);background:var(--cosmic-surface-variant);">
+                            #
+                        </th>
+                        <th style="padding:10px 14px;text-align:left;color:var(--cosmic-primary-light);background:var(--cosmic-surface-variant);">
+                            Lord
+                        </th>
+                        <th style="padding:10px 14px;text-align:left;color:var(--cosmic-primary-light);background:var(--cosmic-surface-variant);">
+                            Start Date
+                        </th>
+                        <th style="padding:10px 14px;text-align:left;color:var(--cosmic-primary-light);background:var(--cosmic-surface-variant);">
+                            Status
+                        </th>
+                        @if (ShowDrillDown)
+                        {
+                            <th style="padding:10px 14px;text-align:left;color:var(--cosmic-primary-light);background:var(--cosmic-surface-variant);">
+                                Drill Down
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var (period, index) in Periods.Select((p, i) => (p, i)))
+                    {
+                        <tr class="@(period.IsCurrentPeriod ? "vimso-period-row current" : "vimso-period-row")"
+                            style="border-bottom:1px solid var(--cosmic-border);transition:background 0.2s;">
+                            <td style="padding:10px 14px;color:var(--cosmic-text-muted);">@(index + 1)</td>
+                            <td style="padding:10px 14px;font-weight:@(period.IsCurrentPeriod ? "700" : "400");">
+                                @GetPlanetDisplay(period.StarLord)
+                            </td>
+                            <td style="padding:10px 14px;color:var(--cosmic-gold);font-family:monospace;font-size:12px;">
+                                @period.Date.ToString("dd MMM yyyy")
+                            </td>
+                            <td style="padding:10px 14px;">
+                                @if (period.IsCurrentPeriod)
+                                {
+                                    <MudBlazor.MudChip T="string" Size="MudBlazor.Size.Small" Color="MudBlazor.Color.Primary" Variant="MudBlazor.Variant.Filled">
+                                        Current
+                                    </MudBlazor.MudChip>
+                                }
+                                else if (period.Date < DateTime.Now)
+                                {
+                                    <MudBlazor.MudChip T="string" Size="MudBlazor.Size.Small" Color="MudBlazor.Color.Default">Past</MudBlazor.MudChip>
+                                }
+                                else
+                                {
+                                    <MudBlazor.MudChip T="string" Size="MudBlazor.Size.Small" Color="MudBlazor.Color.Secondary">Future</MudBlazor.MudChip>
+                                }
+                            </td>
+                            @if (ShowDrillDown)
+                            {
+                                <td style="padding:10px 14px;">
+                                    <MudBlazor.MudIconButton Icon="@MudBlazor.Icons.Material.Filled.ChevronRight"
+                                                   Size="MudBlazor.Size.Small"
+                                                   OnClick="@(() => OnDrillDown.InvokeAsync(period))" />
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <MudBlazor.MudText Typo="MudBlazor.Typo.body2" Style="color:var(--cosmic-text-muted);text-align:center;padding:32px;">
+            No periods to display
+        </MudBlazor.MudText>
+    }
+</div>
+
+@code {
+    [Parameter] public List<VimsoChartCell> Periods { get; set; }
+    [Parameter] public string Title { get; set; } = "Periods";
+    [Parameter] public bool ShowDrillDown { get; set; } = false;
+    [Parameter] public EventCallback<VimsoChartCell> OnDrillDown { get; set; }
+
+    private string GetPlanetDisplay(string lord) => lord?.ToUpper() switch
+    {
+        "SU" => "☉ Sun",
+        "MO" => "☽ Moon",
+        "MA" => "♂ Mars",
+        "ME" => "☿ Mercury",
+        "JU" => "♃ Jupiter",
+        "VE" => "♀ Venus",
+        "SA" => "♄ Saturn",
+        "RA" => "☊ Rahu",
+        "KE" => "☋ Ketu",
+        _ => lord ?? ""
+    };
+}

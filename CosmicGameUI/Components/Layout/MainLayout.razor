@@ -1,0 +1,71 @@
+@inherits LayoutComponentBase
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@using Microsoft.AspNetCore.Components.Authorization
+
+<MudBlazor.MudThemeProvider @ref="_themeProvider" @bind-IsDarkMode="_isDark" />
+<MudBlazor.MudPopoverProvider />
+<MudBlazor.MudDialogProvider />
+<MudBlazor.MudSnackbarProvider />
+
+<AuthorizeView>
+    <Authorized>
+        <MudBlazor.MudLayout>
+            <MudBlazor.MudAppBar Elevation="1" Style="background:var(--cosmic-surface);border-bottom:1px solid var(--cosmic-border);">
+                <MudBlazor.MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Menu"
+                               Color="MudBlazor.Color.Inherit"
+                               Edge="MudBlazor.Edge.Start"
+                               OnClick="@ToggleDrawer" />
+                <MudBlazor.MudText Typo="MudBlazor.Typo.h6"
+                          Style="color:var(--cosmic-primary-light);letter-spacing:2px;font-weight:300;">
+                    ✦ COSMIC BIRTHCHART
+                </MudBlazor.MudText>
+                <MudBlazor.MudSpacer />
+                <MudBlazor.MudTooltip Text="@(_isDark ? "Switch to Light" : "Switch to Dark")">
+                    <MudBlazor.MudIconButton Icon="@(_isDark ? MudBlazor.Icons.Material.Filled.LightMode : MudBlazor.Icons.Material.Filled.DarkMode)"
+                                   Color="MudBlazor.Color.Inherit"
+                                   OnClick="@ToggleTheme" />
+                </MudBlazor.MudTooltip>
+            </MudBlazor.MudAppBar>
+
+            <MudBlazor.MudDrawer @bind-Open="_drawerOpen" Elevation="2" Variant="MudBlazor.DrawerVariant.Responsive"
+                        Style="background:var(--cosmic-surface);">
+                <NavMenu />
+            </MudBlazor.MudDrawer>
+
+            <MudBlazor.MudMainContent>
+                <MudBlazor.MudContainer MaxWidth="MudBlazor.MaxWidth.ExtraLarge" Class="pa-4 pa-md-6">
+                    @Body
+                </MudBlazor.MudContainer>
+            </MudBlazor.MudMainContent>
+        </MudBlazor.MudLayout>
+    </Authorized>
+    <NotAuthorized>
+        @Body
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private MudBlazor.MudThemeProvider _themeProvider;
+    private bool _drawerOpen = true;
+    private bool _isDark = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var savedTheme = await JS.InvokeAsync<string>("CosmicExport.getTheme");
+            _isDark = savedTheme != "light";
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+
+    private async Task ToggleTheme()
+    {
+        _isDark = !_isDark;
+        var theme = _isDark ? "dark" : "light";
+        await JS.InvokeVoidAsync("CosmicExport.setTheme", theme);
+    }
+}

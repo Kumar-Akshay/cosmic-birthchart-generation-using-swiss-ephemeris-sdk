@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cosmic Birthchart</title>
+    <base href="/" />
+    <!-- MudBlazor fonts + icons -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+    <link href="CosmicGameUI.styles.css" rel="stylesheet" />
+</head>
+<body>
+    <div id="app">
+        <div style="display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;background:#0d0d1a;">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="28" stroke="#7c4dff" stroke-width="2"/>
+                <circle cx="30" cy="30" r="18" stroke="#b388ff" stroke-width="1.5" stroke-dasharray="4 3"/>
+                <circle cx="30" cy="30" r="6" fill="#7c4dff"/>
+            </svg>
+            <p style="color:#b388ff;margin-top:16px;font-family:Roboto,sans-serif;font-size:14px;">Loading Cosmic Birthchart...</p>
+        </div>
+    </div>
+
+    <div id="blazor-error-ui" style="display:none;">
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">🗙</span>
+    </div>
+
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script src="js/chartExport.js"></script>
+    <script src="_framework/blazor.webassembly.js"></script>
+</body>
+</html>

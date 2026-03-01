@@ -1,0 +1,106 @@
+@page "/login"
+@inject IAuthService AuthService
+@inject NavigationManager Nav
+@inject MudBlazor.ISnackbar Snackbar
+@using CosmicGame.Shared.Models.Request
+@using CosmicGameUI.Services
+
+<PageTitle>Sign In – Cosmic Birthchart</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="cosmic-logo">
+            <svg width="56" height="56" viewBox="0 0 60 60" fill="none">
+                <circle cx="30" cy="30" r="28" stroke="#7c4dff" stroke-width="2"/>
+                <circle cx="30" cy="30" r="18" stroke="#b388ff" stroke-width="1.5" stroke-dasharray="4 3"/>
+                <circle cx="30" cy="30" r="6" fill="#7c4dff"/>
+            </svg>
+            <h1>Cosmic Birthchart</h1>
+            <p>Swiss Ephemeris · Vedic Astrology</p>
+        </div>
+
+        <MudBlazor.MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudBlazor.MudTextField @bind-Value="_model.UserName"
+                           Label="Username or Email"
+                           Variant="MudBlazor.Variant.Outlined"
+                           Required="true"
+                           RequiredError="Username is required"
+                           Adornment="MudBlazor.Adornment.Start"
+                           AdornmentIcon="@MudBlazor.Icons.Material.Filled.Person"
+                           Class="mb-3" />
+
+            <MudBlazor.MudTextField @bind-Value="_model.Password"
+                           Label="Password"
+                           Variant="MudBlazor.Variant.Outlined"
+                           InputType="@(_showPassword ? MudBlazor.InputType.Text : MudBlazor.InputType.Password)"
+                           Required="true"
+                           RequiredError="Password is required"
+                           Adornment="MudBlazor.Adornment.End"
+                           AdornmentIcon="@(_showPassword ? MudBlazor.Icons.Material.Filled.VisibilityOff : MudBlazor.Icons.Material.Filled.Visibility)"
+                           OnAdornmentClick="@(() => _showPassword = !_showPassword)"
+                           Class="mb-4" />
+
+            <MudBlazor.MudButton Variant="MudBlazor.Variant.Filled"
+                        Color="MudBlazor.Color.Primary"
+                        FullWidth="true"
+                        Size="MudBlazor.Size.Large"
+                        OnClick="@HandleLogin"
+                        Disabled="@_loading"
+                        Style="border-radius:8px;padding:12px;">
+                @if (_loading)
+                {
+                    <MudBlazor.MudProgressCircular Size="MudBlazor.Size.Small" Indeterminate="true" Class="mr-2" />
+                }
+                Sign In
+            </MudBlazor.MudButton>
+        </MudBlazor.MudForm>
+
+        <div style="margin-top:16px;text-align:center;">
+            <MudBlazor.MudLink Href="/forgot-password" Color="MudBlazor.Color.Primary">Forgot password?</MudBlazor.MudLink>
+        </div>
+        <div style="margin-top:8px;text-align:center;">
+            <MudBlazor.MudText Typo="MudBlazor.Typo.body2" Style="color:var(--cosmic-text-muted)">
+                No account? <MudBlazor.MudLink Href="/register" Color="MudBlazor.Color.Primary">Register</MudBlazor.MudLink>
+            </MudBlazor.MudText>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery] private string returnUrl { get; set; }
+
+    private LoginRequest _model = new();
+    private MudBlazor.MudForm _form;
+    private bool _isValid;
+    private bool _loading;
+    private bool _showPassword;
+
+    private async Task HandleLogin()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        _loading = true;
+        try
+        {
+            var result = await AuthService.LoginAsync(_model);
+            if (result?.success == true)
+            {
+                Snackbar.Add("Welcome back!", MudBlazor.Severity.Success);
+                Nav.NavigateTo(returnUrl ?? "/");
+            }
+            else
+            {
+                Snackbar.Add(result?.message ?? "Login failed. Check your credentials.", MudBlazor.Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Connection error: {ex.Message}", MudBlazor.Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

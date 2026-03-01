@@ -1,0 +1,201 @@
+@page "/chart-holders/add"
+@page "/chart-holders/edit/{Id:int}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject IChartHolderApiService ChartService
+@inject NavigationManager Nav
+@inject MudBlazor.ISnackbar Snackbar
+@using CosmicGame.Shared.Models.Request
+@using CosmicGame.Shared.Models.ViewModel
+@using CosmicGameUI.Services
+
+<PageTitle>@(IsEdit ? "Edit" : "Add") Birth Chart – Cosmic Birthchart</PageTitle>
+
+<MudBlazor.MudText Typo="MudBlazor.Typo.h5" Style="color:var(--cosmic-primary-light)" Class="mb-4">
+    @(IsEdit ? "Edit" : "New") Birth Chart
+</MudBlazor.MudText>
+
+<MudBlazor.MudPaper Class="pa-6" Style="background:var(--cosmic-surface);border:1px solid var(--cosmic-border);border-radius:12px;">
+    <MudBlazor.MudForm @ref="_form" @bind-IsValid="_isValid">
+        <MudBlazor.MudGrid>
+            <!-- Personal Info -->
+            <MudBlazor.MudItem xs="12">
+                <MudBlazor.MudText Typo="MudBlazor.Typo.subtitle1" Style="color:var(--cosmic-primary-light)" Class="mb-2">
+                    Personal Information
+                </MudBlazor.MudText>
+            </MudBlazor.MudItem>
+
+            <MudBlazor.MudItem xs="12" sm="6">
+                <MudBlazor.MudTextField @bind-Value="_model.ChildName" Label="Full Name *" Variant="MudBlazor.Variant.Outlined"
+                               Required="true" RequiredError="Name is required" />
+            </MudBlazor.MudItem>
+            <MudBlazor.MudItem xs="12" sm="6">
+                <MudBlazor.MudSelect @bind-Value="_genderBool" Label="Gender *" Variant="MudBlazor.Variant.Outlined">
+                    <MudBlazor.MudSelectItem Value="true">Male</MudBlazor.MudSelectItem>
+                    <MudBlazor.MudSelectItem Value="false">Female</MudBlazor.MudSelectItem>
+                </MudBlazor.MudSelect>
+            </MudBlazor.MudItem>
+            <MudBlazor.MudItem xs="12" sm="6">
+                <MudBlazor.MudTextField @bind-Value="_model.FatherName" Label="Father's Name" Variant="MudBlazor.Variant.Outlined" />
+            </MudBlazor.MudItem>
+            <MudBlazor.MudItem xs="12" sm="6">
+                <MudBlazor.MudTextField @bind-Value="_model.MotherName" Label="Mother's Name" Variant="MudBlazor.Variant.Outlined" />
+            </MudBlazor.MudItem>
+
+            <!-- Birth Info -->
+            <MudBlazor.MudItem xs="12" Class="mt-4">
+                <MudBlazor.MudText Typo="MudBlazor.Typo.subtitle1" Style="color:var(--cosmic-primary-light)" Class="mb-2">
+                    Birth Information
+                </MudBlazor.MudText>
+            </MudBlazor.MudItem>
+
+            <MudBlazor.MudItem xs="12" sm="6">
+                <MudBlazor.MudTextField @bind-Value="_model.DOB" Label="Date of Birth * (dd/MM/yyyy HH:mm)"
+                               Variant="MudBlazor.Variant.Outlined"
+                               Required="true" RequiredError="Date of birth is required"
+                               Placeholder="25/08/1990 14:30" />
+            </MudBlazor.MudItem>
+            <MudBlazor.MudItem xs="12" sm="6">
+                <MudBlazor.MudTextField @bind-Value="_model.BirhPlace" Label="Birth Place *" Variant="MudBlazor.Variant.Outlined"
+                               Required="true" />
+            </MudBlazor.MudItem>
+
+            <!-- Location -->
+            <MudBlazor.MudItem xs="12" sm="6">
+                <MudBlazor.MudSelect @bind-Value="_model.Country" Label="Country *" Variant="MudBlazor.Variant.Outlined"
+                            Required="true" ValueChanged="@OnCountryChanged">
+                    @foreach (var c in _countries)
+                    {
+                        <MudBlazor.MudSelectItem Value="@c">@c</MudBlazor.MudSelectItem>
+                    }
+                </MudBlazor.MudSelect>
+            </MudBlazor.MudItem>
+            <MudBlazor.MudItem xs="12" sm="6">
+                <MudBlazor.MudSelect @bind-Value="_model.TimeZone" Label="Timezone *" Variant="MudBlazor.Variant.Outlined"
+                            Required="true" Disabled="@(!_timezones.Any())">
+                    @foreach (var tz in _timezones)
+                    {
+                        <MudBlazor.MudSelectItem Value="@tz.ActualTimeZone">@tz.ActualTimeZone (@tz.TimeZoneValue)</MudBlazor.MudSelectItem>
+                    }
+                </MudBlazor.MudSelect>
+            </MudBlazor.MudItem>
+            <MudBlazor.MudItem xs="12" sm="6">
+                <MudBlazor.MudTextField @bind-Value="_model.Latitude" Label="Latitude" Variant="MudBlazor.Variant.Outlined" />
+            </MudBlazor.MudItem>
+            <MudBlazor.MudItem xs="12" sm="6">
+                <MudBlazor.MudTextField @bind-Value="_model.Longitude" Label="Longitude" Variant="MudBlazor.Variant.Outlined" />
+            </MudBlazor.MudItem>
+
+            <!-- Astrology Settings -->
+            <MudBlazor.MudItem xs="12" Class="mt-4">
+                <MudBlazor.MudText Typo="MudBlazor.Typo.subtitle1" Style="color:var(--cosmic-primary-light)" Class="mb-2">
+                    Astrology Settings
+                </MudBlazor.MudText>
+            </MudBlazor.MudItem>
+
+            <MudBlazor.MudItem xs="12" sm="6">
+                <MudBlazor.MudSelect @bind-Value="_model.Ayanamsa" Label="Ayanamsa *" Variant="MudBlazor.Variant.Outlined" Required="true">
+                    <MudBlazor.MudSelectItem Value="@("1")">Lahiri (Chitrapaksha)</MudBlazor.MudSelectItem>
+                    <MudBlazor.MudSelectItem Value="@("3")">Raman</MudBlazor.MudSelectItem>
+                    <MudBlazor.MudSelectItem Value="@("5")">Krishnamurti (KP)</MudBlazor.MudSelectItem>
+                    <MudBlazor.MudSelectItem Value="@("7")">Yukteshwar</MudBlazor.MudSelectItem>
+                </MudBlazor.MudSelect>
+            </MudBlazor.MudItem>
+            <MudBlazor.MudItem xs="12" sm="6">
+                <MudBlazor.MudSelect @bind-Value="_model.HouseSystem" Label="House System *" Variant="MudBlazor.Variant.Outlined" Required="true">
+                    <MudBlazor.MudSelectItem Value="@("P")">Placidus</MudBlazor.MudSelectItem>
+                    <MudBlazor.MudSelectItem Value="@("K")">Koch</MudBlazor.MudSelectItem>
+                    <MudBlazor.MudSelectItem Value="@("E")">Equal House</MudBlazor.MudSelectItem>
+                    <MudBlazor.MudSelectItem Value="@("W")">Whole Sign</MudBlazor.MudSelectItem>
+                </MudBlazor.MudSelect>
+            </MudBlazor.MudItem>
+
+            <!-- Actions -->
+            <MudBlazor.MudItem xs="12" Class="mt-4" Style="display:flex;gap:12px;justify-content:flex-end;">
+                <MudBlazor.MudButton Variant="MudBlazor.Variant.Outlined" Href="/chart-holders">Cancel</MudBlazor.MudButton>
+                <MudBlazor.MudButton Variant="MudBlazor.Variant.Filled" Color="MudBlazor.Color.Primary"
+                            OnClick="@HandleSubmit" Disabled="@_saving"
+                            StartIcon="@MudBlazor.Icons.Material.Filled.Save">
+                    @if (_saving) { <MudBlazor.MudProgressCircular Size="MudBlazor.Size.Small" Indeterminate="true" Class="mr-2" /> }
+                    @(IsEdit ? "Update" : "Create") Chart
+                </MudBlazor.MudButton>
+            </MudBlazor.MudItem>
+        </MudBlazor.MudGrid>
+    </MudBlazor.MudForm>
+</MudBlazor.MudPaper>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private bool IsEdit => Id.HasValue;
+    private ChartHolderRequest _model = new() { Ayanamsa = "5", HouseSystem = "P" };
+    private MudBlazor.MudForm _form;
+    private bool _isValid;
+    private bool _saving;
+    private bool _genderBool = true;
+    private List<string> _countries = new();
+    private List<TimeZoneModel> _timezones = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _countries = await ChartService.GetCountriesAsync();
+        if (IsEdit)
+        {
+            var existing = await ChartService.GetChartHolderByIdAsync(Id!.Value);
+            if (existing != null)
+            {
+                _model = new ChartHolderRequest
+                {
+                    ChartHolderID = existing.ChartHolderID.ToString(),
+                    UserID = existing.UserID,
+                    ChildName = existing.ChildName,
+                    FatherName = existing.FatherName,
+                    MotherName = existing.MotherName,
+                    BirhPlace = existing.BirhPlace,
+                    Country = existing.Country,
+                    DOB = existing.DOB,
+                    TimeZone = existing.TimeZone,
+                    Ayanamsa = existing.Ayanamsa,
+                    HouseSystem = existing.HouseSystem,
+                    Latitude = existing.Latitude,
+                    Longitude = existing.Longitude
+                };
+                _genderBool = existing.Gender == "Male";
+                if (!string.IsNullOrEmpty(existing.Country))
+                    _timezones = await ChartService.GetTimeZonesAsync(existing.Country);
+            }
+        }
+    }
+
+    private async Task OnCountryChanged(string country)
+    {
+        _model.Country = country;
+        _timezones = await ChartService.GetTimeZonesAsync(country);
+        _model.TimeZone = _timezones.FirstOrDefault()?.ActualTimeZone ?? "";
+    }
+
+    private async Task HandleSubmit()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+        _saving = true;
+        _model.Gender = _genderBool;
+        _model.IsAdd = !IsEdit;
+        try
+        {
+            var result = IsEdit
+                ? await ChartService.UpdateChartHolderAsync(_model)
+                : await ChartService.AddChartHolderAsync(_model);
+
+            if (result?.success == true)
+            {
+                Snackbar.Add(IsEdit ? "Chart updated!" : "Chart created!", MudBlazor.Severity.Success);
+                Nav.NavigateTo("/chart-holders");
+            }
+            else
+            {
+                Snackbar.Add(result?.message ?? "Save failed.", MudBlazor.Severity.Error);
+            }
+        }
+        finally { _saving = false; }
+    }
+}
