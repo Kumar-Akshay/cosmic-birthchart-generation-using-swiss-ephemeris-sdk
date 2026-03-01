@@ -50,7 +50,7 @@
           PanelClass="pt-4" @bind-ActivePanelIndex="_activeTab"
           TabHeaderClass="cosmic-tabs">
     <!-- Traditional Chart -->
-    <MudBlazor.MudTabPanel Text="Traditional" Icon="@MudBlazor.Icons.Material.Filled.CircleOutlined">
+    <MudBlazor.MudTabPanel Text="Traditional" Icon="@MudBlazor.Icons.Material.Filled.RadioButtonUnchecked">
         @if (_loadingTraditional)
         {
             <LoadingSpinner Message="Calculating planetary positions..." />

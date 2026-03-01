@@ -61,7 +61,7 @@
 
             <!-- Location -->
             <MudBlazor.MudItem xs="12" sm="6">
-                <MudBlazor.MudSelect @bind-Value="_model.Country" Label="Country *" Variant="MudBlazor.Variant.Outlined"
+                <MudBlazor.MudSelect Value="_model.Country" T="string" Label="Country *" Variant="MudBlazor.Variant.Outlined"
                             Required="true" ValueChanged="@OnCountryChanged">
                     @foreach (var c in _countries)
                     {

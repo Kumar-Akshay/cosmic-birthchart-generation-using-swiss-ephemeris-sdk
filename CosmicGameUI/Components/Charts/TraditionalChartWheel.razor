@@ -6,20 +6,14 @@
          viewBox="0 0 500 500"
          xmlns="http://www.w3.org/2000/svg">
 
-        @* Outer ring — zodiac sign labels *@
-        @for (int i = 0; i < 12; i++)
-        {
-            var angle = i * 30.0 - 90.0;
-            var rad = angle * Math.PI / 180.0;
-            var x = 250 + 225 * Math.Cos(rad);
-            var y = 250 + 225 * Math.Sin(rad);
-            <text x="@x.ToString("F1")" y="@y.ToString("F1")"
-                  text-anchor="middle"
-                  dominant-baseline="middle"
-                  class="zodiac-label">
-                @ZodiacSymbols[i]
-            </text>
-        }
+        @* Outer circle *@
+        <circle cx="250" cy="250" r="200" fill="none" stroke="var(--cosmic-primary)" stroke-width="1.5" />
+
+        @* Middle circle *@
+        <circle cx="250" cy="250" r="140" fill="none" stroke="var(--cosmic-primary)" stroke-width="1" opacity="0.4" />
+
+        @* Inner circle *@
+        <circle cx="250" cy="250" r="100" fill="var(--cosmic-surface)" stroke="var(--cosmic-primary)" stroke-width="1.5" />
 
         @* House divider lines from outer to inner ring *@
         @for (int i = 0; i < 12; i++)
@@ -34,62 +28,46 @@
                   stroke="var(--cosmic-primary)" stroke-width="1" opacity="0.5" />
         }
 
-        @* Outer circle *@
-        <circle cx="250" cy="250" r="200" fill="none" stroke="var(--cosmic-primary)" stroke-width="1.5" />
-
-        @* Middle circle *@
-        <circle cx="250" cy="250" r="140" fill="none" stroke="var(--cosmic-primary)" stroke-width="1" opacity="0.4" />
-
-        @* Inner circle *@
-        <circle cx="250" cy="250" r="100" fill="var(--cosmic-surface)" stroke="var(--cosmic-primary)" stroke-width="1.5" />
-
-        @* House segments with hover support *@
+        @* House segments: number, planet symbols, zodiac sign *@
         @for (int h = 0; h < 12; h++)
         {
             var cell = Cells?.ElementAtOrDefault(h);
-            var startAngle = (h * 30 - 90) * Math.PI / 180.0;
             var midAngle = ((h * 30 + 15) - 90) * Math.PI / 180.0;
 
             @* House number in middle ring *@
             var numX = 250 + 120 * Math.Cos(midAngle);
             var numY = 250 + 120 * Math.Sin(midAngle);
-            <text x="@numX.ToString("F1")" y="@numY.ToString("F1")"
-                  text-anchor="middle" dominant-baseline="middle"
-                  class="house-number">
-                @(h + 1)
-            </text>
+            @((MarkupString)$"<text x=\"{numX:F1}\" y=\"{numY:F1}\" text-anchor=\"middle\" dominant-baseline=\"middle\" class=\"house-number\">{h + 1}</text>")
 
             @* Planets for this house *@
             @if (cell?.Planets?.Any() == true)
             {
                 var planetX = 250 + 165 * Math.Cos(midAngle);
                 var planetY = 250 + 165 * Math.Sin(midAngle);
-                <text x="@planetX.ToString("F1")" y="@planetY.ToString("F1")"
-                      text-anchor="middle" dominant-baseline="middle"
-                      class="planet-text">
-                    @string.Join(" ", cell.Planets.Select(p => GetPlanetSymbol(p)))
-                </text>
+                var symbols = string.Join(" ", cell.Planets.Select(p => GetPlanetSymbol(p)));
+                @((MarkupString)$"<text x=\"{planetX:F1}\" y=\"{planetY:F1}\" text-anchor=\"middle\" dominant-baseline=\"middle\" class=\"planet-text\">{symbols}</text>")
             }
 
-            @* Zodiac sign in outer ring *@
+            @* Zodiac sign label in outer ring *@
             var signX = 250 + 175 * Math.Cos(midAngle);
             var signY = 250 + 175 * Math.Sin(midAngle);
-            <text x="@signX.ToString("F1")" y="@signY.ToString("F1")"
-                  text-anchor="middle" dominant-baseline="middle"
-                  class="zodiac-label" style="font-size:9px;">
-                @(cell?.ZodiacSign ?? ZodiacNames[h])
-            </text>
+            var signLabel = System.Web.HttpUtility.HtmlEncode(cell?.ZodiacSign ?? ZodiacNames[h]);
+            @((MarkupString)$"<text x=\"{signX:F1}\" y=\"{signY:F1}\" text-anchor=\"middle\" dominant-baseline=\"middle\" class=\"zodiac-label\" style=\"font-size:9px;\">{signLabel}</text>")
+        }
+
+        @* Outer ring zodiac symbols *@
+        @for (int i = 0; i < 12; i++)
+        {
+            var angle = i * 30.0 - 90.0;
+            var rad = angle * Math.PI / 180.0;
+            var x = 250 + 225 * Math.Cos(rad);
+            var y = 250 + 225 * Math.Sin(rad);
+            @((MarkupString)$"<text x=\"{x:F1}\" y=\"{y:F1}\" text-anchor=\"middle\" dominant-baseline=\"middle\" class=\"zodiac-label\">{ZodiacSymbols[i]}</text>")
         }
 
         @* Center label *@
-        <text x="250" y="245" text-anchor="middle" dominant-baseline="middle"
-              style="fill:var(--cosmic-primary-light);font-size:11px;font-family:Roboto,sans-serif;">
-            ✦
-        </text>
-        <text x="250" y="262" text-anchor="middle" dominant-baseline="middle"
-              style="fill:var(--cosmic-text-muted);font-size:8px;font-family:Roboto,sans-serif;">
-            RASI
-        </text>
+        @((MarkupString)"<text x=\"250\" y=\"245\" text-anchor=\"middle\" dominant-baseline=\"middle\" style=\"fill:var(--cosmic-primary-light);font-size:11px;font-family:Roboto,sans-serif;\">&#x2726;</text>")
+        @((MarkupString)"<text x=\"250\" y=\"262\" text-anchor=\"middle\" dominant-baseline=\"middle\" style=\"fill:var(--cosmic-text-muted);font-size:8px;font-family:Roboto,sans-serif;\">RASI</text>")
     </svg>
 </div>
 
@@ -109,15 +87,15 @@
 
     private static string GetPlanetSymbol(string planet) => planet?.ToUpper() switch
     {
-        "SUN" or "SU" => "☉",
-        "MOON" or "MO" => "☽",
-        "MARS" or "MA" => "♂",
-        "MERCURY" or "ME" => "☿",
-        "JUPITER" or "JU" => "♃",
-        "VENUS" or "VE" => "♀",
-        "SATURN" or "SA" => "♄",
-        "RAHU" or "RA" => "☊",
-        "KETU" or "KE" => "☋",
-        _ => planet ?? ""
+        "SUN" or "SU" => "&#x2609;",
+        "MOON" or "MO" => "&#x263D;",
+        "MARS" or "MA" => "&#x2642;",
+        "MERCURY" or "ME" => "&#x263F;",
+        "JUPITER" or "JU" => "&#x2643;",
+        "VENUS" or "VE" => "&#x2640;",
+        "SATURN" or "SA" => "&#x2644;",
+        "RAHU" or "RA" => "&#x260A;",
+        "KETU" or "KE" => "&#x260B;",
+        _ => System.Web.HttpUtility.HtmlEncode(planet ?? "")
     };
 }

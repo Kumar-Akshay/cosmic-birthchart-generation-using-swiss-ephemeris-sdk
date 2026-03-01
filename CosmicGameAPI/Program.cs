@@ -63,8 +63,7 @@ builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", policy =>
 
 builder.Services.AddEndpointsApiExplorer();
 
-// .NET 9 OpenAPI + Swashbuckle for Swagger UI
-builder.Services.AddOpenApi();
+// Swashbuckle Swagger
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -106,7 +105,6 @@ var app = builder.Build();
 // HTTP pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
